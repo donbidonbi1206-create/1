@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notion 角色語錄 Widget</title>
   <style>
-    /* 讓整體網頁背景透明，並將內容 100% 水平與垂直置中 */
     html, body {
       margin: 0;
       padding: 0;
@@ -16,18 +15,17 @@
       justify-content: center;
       align-items: center;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      overflow: hidden;
+      /* 允許左側懸空的對話框顯示，不剪裁 */
+      overflow: visible;
     }
 
-    /* 組合容器：作為對話框絕對定位的參考基準 point */
+    /* 組合容器：寬度完全等於圖片寬度，不包含左邊懸空的對話框 */
     .widget-container {
       position: relative;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
+      display: inline-block;
     }
 
-    /* 角色立繪：陰影透明度設定為 30% (rgba 透明度 0.3) */
+    /* 角色立繪：陰影透明度 30% */
     .avatar {
       width: 140px;          /* 可依需求調整角色寬度 */
       height: auto;
@@ -36,11 +34,9 @@
       object-fit: contain;
       display: block;
       user-select: none;
-      /* 順著透明 PNG 外輪廓投射 30% 透明度的柔和陰影 */
       filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
     }
 
-    /* 滑鼠懸停與點擊時的互動縮放反饋 */
     .avatar:hover { 
       transform: scale(1.04); 
     }
@@ -52,10 +48,10 @@
     .quote-box {
       position: absolute;
       right: 90%;            /* 覆蓋 10% 面積在角色左側邊緣 */
-      top: 65%;              /* 位於角色的中間偏下位置 */
-      transform: translateY(-50%); /* 垂直方向對齊中心點 */
-      background: rgba(255, 255, 255, 0.6); /* 60% 透明度的白色背景 */
-      backdrop-filter: blur(4px);            /* 輕微毛玻璃效果，提升文字清晰度 */
+      top: 65%;              /* 角色的中間偏下位置 */
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.6); /* 60% 透明度白色背景 */
+      backdrop-filter: blur(4px);            /* 毛玻璃模糊效果 */
       -webkit-backdrop-filter: blur(4px);
       border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.4);
@@ -71,17 +67,17 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      pointer-events: none;  /* 點擊對話框可穿透點擊到後方的角色圖片 */
-      z-index: 2;            /* 確保對話框永遠層疊在圖片上方 */
+      pointer-events: none;  /* 點擊可穿透至後方圖片 */
+      z-index: 2;
       user-select: none;
       box-sizing: border-box;
+      white-space: normal;
     }
   </style>
 </head>
 <body>
 
   <div class="widget-container">
-    <!-- 點擊圖片觸發雙隨機切換 -->
     <img id="character" class="avatar" src="https://via.placeholder.com/140x180/000000/ffffff?text=Char+1" alt="角色立繪" onclick="randomizeAll()">
     <div id="quote" class="quote-box">點擊角色，隨機組合！</div>
   </div>
@@ -121,12 +117,10 @@
       let newImgIndex;
       let newQuoteIndex;
 
-      // 獨立隨機抽取圖片（確保不連續重複）
       do {
         newImgIndex = Math.floor(Math.random() * images.length);
       } while (newImgIndex === lastImgIndex && images.length > 1);
 
-      // 獨立隨機抽取語錄（確保不連續重複）
       do {
         newQuoteIndex = Math.floor(Math.random() * quotes.length);
       } while (newQuoteIndex === lastQuoteIndex && quotes.length > 1);
@@ -134,7 +128,6 @@
       lastImgIndex = newImgIndex;
       lastQuoteIndex = newQuoteIndex;
 
-      // 更新圖片與語錄內容
       document.getElementById("character").src = images[newImgIndex];
       document.getElementById("quote").innerText = quotes[newQuoteIndex];
     }
