@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notion 角色語錄 Widget</title>
+  <style>
+    /* 讓整體網頁背景透明，並將內容 100% 水平與垂直置中 */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    /* 組合容器：作為對話框絕對定位的參考基準 point */
+    .widget-container {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 角色立繪：陰影透明度設定為 30% (rgba 透明度 0.3) */
+    .avatar {
+      width: 140px;          /* 可依需求調整角色寬度 */
+      height: auto;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out, filter 0.2s;
+      object-fit: contain;
+      display: block;
+      user-select: none;
+      /* 順著透明 PNG 外輪廓投射 30% 透明度的柔和陰影 */
+      filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+    }
+
+    /* 滑鼠懸停與點擊時的互動縮放反饋 */
+    .avatar:hover { 
+      transform: scale(1.04); 
+    }
+    .avatar:active { 
+      transform: scale(0.96); 
+    }
+
+    /* 對話框：重疊 10% 在角色中間偏下左側 */
+    .quote-box {
+      position: absolute;
+      right: 90%;            /* 覆蓋 10% 面積在角色左側邊緣 */
+      top: 65%;              /* 位於角色的中間偏下位置 */
+      transform: translateY(-50%); /* 垂直方向對齊中心點 */
+      background: rgba(255, 255, 255, 0.6); /* 60% 透明度的白色背景 */
+      backdrop-filter: blur(4px);            /* 輕微毛玻璃效果，提升文字清晰度 */
+      -webkit-backdrop-filter: blur(4px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 10px 16px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #222;
+      text-align: center;
+      min-width: 140px;
+      max-width: 200px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      pointer-events: none;  /* 點擊對話框可穿透點擊到後方的角色圖片 */
+      z-index: 2;            /* 確保對話框永遠層疊在圖片上方 */
+      user-select: none;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <!-- 點擊圖片觸發雙隨機切換 -->
+    <img id="character" class="avatar" src="https://via.placeholder.com/140x180/000000/ffffff?text=Char+1" alt="角色立繪" onclick="randomizeAll()">
+    <div id="quote" class="quote-box">點擊角色，隨機組合！</div>
+  </div>
+
+  <script>
+    // 1. 角色透明 PNG 圖片網址清單（可自由新增）
+    const images = [
+      "https://30mins.notion.site/image/attachment%3A69e8d81a-a9c0-46af-84d4-8f86938f6c5f%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(1).png?table=block&id=3ef4455a-9efb-80ea-89bb-e5119b39c269&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl",
+      "https://30mins.notion.site/image/attachment%3A227f267d-d7d5-48b1-b885-69521a8960f3%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(2).png?table=block&id=3ef4455a-9efb-8035-996b-f11eb880978a&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl",
+      "https://30mins.notion.site/image/attachment%3A8bcd5c30-93d7-457c-ae7f-aeaa6fb31905%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(3).png?table=block&id=3ef4455a-9efb-8047-b257-c558db766ffd&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl",
+      "https://30mins.notion.site/image/attachment%3A791d029b-dcf7-410b-9ca5-3422cd77de4c%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(4).png?table=block&id=3ef4455a-9efb-80d2-a3e7-db9f6d3abb90&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl",
+      "https://30mins.notion.site/image/attachment%3Ad9703722-3916-48fc-8f3d-2aa52ef9bbf7%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(5).png?table=block&id=3ef4455a-9efb-805b-a6c8-d5cfbf68b2ab&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl"
+    ];
+
+    // 2. 語錄文字清單（可自由新增）
+    const quotes = [
+      "「得了，少說廢話，走吧！」",
+      "「哈哈哈哈哈，老天，這也太搞笑了。」",
+      "「ᯇᴗᯇ」",
+      "「先歇一會兒，再往上衝吧👆」",
+      "「鯊魚仔，你說——人類的飛行能力，究竟是被誰偷走的呢？」",
+      "「下輩子我們也做兄弟吧。我們一定可以創造出屬於我們自己的《萊特兄弟》的故事。」",
+      "「人類要是感到疼痛，也是可以大聲示弱的吧？這難道不是人類被發明出來時就設計好的機制嗎？」",
+      "「如果我能活得更久一點，我也想去看看，什麼是愛。你說呢，鯊魚仔？」",
+      "「昨天我從床底下挖出一本破字典，翻開一瞧，上面寫著『孤獨』——a-l-o-n-e。」",
+      "「喔！路易！你做的這盤番茄炒蛋蓋飯可真是不賴！我想一口氣吃下一百萬份！」",
+      "「等我哪天想起來那家飾品店到底藏在哪條街角，咱們就一起去挑幾對酷炫的耳環吧——」",
+      "「完蛋，昨天忘了幫薇薇調整好防曬系統……看來等她下次飛回來，我的臉非得被她那條大紅尾巴狠狠賞上幾巴掌不可了！」",
+      "「路易！別再睡懶覺啦！快爬起來看看我剛改裝完成的『垃圾桶機器人』！」",
+      "「我和路易是全天下最厲害的搭檔，對吧？」",
+    ];
+
+    let lastImgIndex = -1;
+    let lastQuoteIndex = -1;
+
+    function randomizeAll() {
+      let newImgIndex;
+      let newQuoteIndex;
+
+      // 獨立隨機抽取圖片（確保不連續重複）
+      do {
+        newImgIndex = Math.floor(Math.random() * images.length);
+      } while (newImgIndex === lastImgIndex && images.length > 1);
+
+      // 獨立隨機抽取語錄（確保不連續重複）
+      do {
+        newQuoteIndex = Math.floor(Math.random() * quotes.length);
+      } while (newQuoteIndex === lastQuoteIndex && quotes.length > 1);
+
+      lastImgIndex = newImgIndex;
+      lastQuoteIndex = newQuoteIndex;
+
+      // 更新圖片與語錄內容
+      document.getElementById("character").src = images[newImgIndex];
+      document.getElementById("quote").innerText = quotes[newQuoteIndex];
+    }
+  </script>
+</body>
+</html>
