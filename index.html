@@ -15,14 +15,15 @@
       justify-content: center;
       align-items: center;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      /* 允許左側懸空的對話框顯示，不剪裁 */
-      overflow: visible;
+      overflow: hidden;
     }
 
-    /* 組合容器：寬度完全等於圖片寬度，不包含左邊懸空的對話框 */
+    /* 垂直排列容器：角色在上、對話框在下，整體水平置中 */
     .widget-container {
       position: relative;
-      display: inline-block;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     /* 角色立繪：陰影透明度 30% */
@@ -35,6 +36,7 @@
       display: block;
       user-select: none;
       filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+      z-index: 1;
     }
 
     .avatar:hover { 
@@ -44,12 +46,9 @@
       transform: scale(0.96); 
     }
 
-    /* 對話框：重疊 10% 在角色中間偏下左側 */
+    /* 對話框：放在圖片下方，頂部向上微移重疊約 5% */
     .quote-box {
-      position: absolute;
-      right: 90%;            /* 覆蓋 10% 面積在角色左側邊緣 */
-      top: 65%;              /* 角色的中間偏下位置 */
-      transform: translateY(-50%);
+      margin-top: -12px;     /* 負邊距：讓對話框頂部向上蓋住圖片底部約 5% */
       background: rgba(255, 255, 255, 0.6); /* 60% 透明度白色背景 */
       backdrop-filter: blur(4px);            /* 毛玻璃模糊效果 */
       -webkit-backdrop-filter: blur(4px);
@@ -60,18 +59,17 @@
       line-height: 1.4;
       color: #222;
       text-align: center;
-      min-width: 140px;
-      max-width: 200px;
+      min-width: 150px;
+      max-width: 220px;
       min-height: 38px;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       pointer-events: none;  /* 點擊可穿透至後方圖片 */
-      z-index: 2;
+      z-index: 2;            /* 確保對話框壓在圖片上方 */
       user-select: none;
       box-sizing: border-box;
-      white-space: normal;
     }
   </style>
 </head>
