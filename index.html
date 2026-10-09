@@ -3,8 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notion 角色語錄 Widget</title>
+  <title>切克斯語錄 Widget</title>
   <style>
+    :root {
+      --card-bg: rgba(255, 255, 255, 0.7);
+      --card-border: rgba(255, 255, 255, 0.5);
+      --text-color: #222222;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    /* 適應 Notion 深色模式 (Dark Mode) */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --card-bg: rgba(30, 30, 30, 0.75);
+        --card-border: rgba(255, 255, 255, 0.15);
+        --text-color: #f0f0f0;
+        --shadow: rgba(0, 0, 0, 0.3);
+      }
+    }
+
     html, body {
       margin: 0;
       padding: 0;
@@ -16,72 +33,89 @@
       align-items: center;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       overflow: hidden;
+      user-select: none;
     }
 
-    /* 垂直排列容器：角色在上、對話框在下，整體水平置中 */
     .widget-container {
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
+      cursor: pointer;
     }
 
-    /* 角色立繪：陰影透明度 30% */
+    /* 角色立繪 */
     .avatar {
-      width: 140px;          /* 可依需求調整角色寬度 */
+      width: 150px;
       height: auto;
-      cursor: pointer;
-      transition: transform 0.2s ease-in-out, filter 0.2s;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
       object-fit: contain;
       display: block;
-      user-select: none;
-      filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+      filter: drop-shadow(0px 4px 10px rgba(0, 0, 0, 0.25));
       z-index: 1;
     }
 
-    .avatar:hover { 
-      transform: scale(1.04); 
+    /* 懸停與點擊的動態反饋 */
+    .widget-container:hover .avatar {
+      transform: scale(1.05);
     }
-    .avatar:active { 
-      transform: scale(0.96); 
+    .widget-container:active .avatar {
+      transform: scale(0.95);
     }
 
-    /* 對話框：放在圖片下方，頂部向上微移重疊約 5% */
+    /* 點擊時角色的 Q 彈動畫類別 */
+    .avatar.pop {
+      animation: popAnim 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popAnim {
+      0% { transform: scale(0.92); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    /* 對話框樣式 */
     .quote-box {
-      margin-top: -12px;     /* 負邊距：讓對話框頂部向上蓋住圖片底部約 5% */
-      background: rgba(255, 255, 255, 0.6); /* 60% 透明度白色背景 */
-      backdrop-filter: blur(4px);            /* 毛玻璃模糊效果 */
-      -webkit-backdrop-filter: blur(4px);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      margin-top: -12px;
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
       padding: 10px 16px;
-      font-size: 13px;
-      line-height: 1.4;
-      color: #222;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: var(--text-color);
       text-align: center;
-      min-width: 150px;
-      max-width: 220px;
-      min-height: 38px;
+      min-width: 160px;
+      max-width: 240px;
+      min-height: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      pointer-events: none;  /* 點擊可穿透至後方圖片 */
-      z-index: 2;            /* 確保對話框壓在圖片上方 */
-      user-select: none;
+      box-shadow: 0 4px 14px var(--shadow);
+      pointer-events: none;
+      z-index: 2;
       box-sizing: border-box;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    /* 文字切換時的漸隱漸現 */
+    .quote-box.fade {
+      opacity: 0.3;
+      transform: translateY(3px);
     }
   </style>
 </head>
 <body>
 
-  <div class="widget-container">
-    <img id="character" class="avatar" src="https://via.placeholder.com/140x180/000000/ffffff?text=Char+1" alt="角色立繪" onclick="randomizeAll()">
-    <div id="quote" class="quote-box">點擊角色，隨機組合！</div>
+  <div class="widget-container" onclick="randomizeAll()">
+    <!-- 預設直接顯示第一張角色圖 -->
+    <img id="character" class="avatar" src="https://30mins.notion.site/image/attachment%3A69e8d81a-a9c0-46af-84d4-8f86938f6c5f%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(1).png?table=block&id=3ef4455a-9efb-80ea-89bb-e5119b39c269&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl" alt="切克斯">
+    <div id="quote" class="quote-box">點擊切克斯，收聽廣播！</div>
   </div>
 
   <script>
-    // 1. 角色透明 PNG 圖片網址清單（可自由新增）
     const images = [
       "https://30mins.notion.site/image/attachment%3A69e8d81a-a9c0-46af-84d4-8f86938f6c5f%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(1).png?table=block&id=3ef4455a-9efb-80ea-89bb-e5119b39c269&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl",
       "https://30mins.notion.site/image/attachment%3A227f267d-d7d5-48b1-b885-69521a8960f3%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(2).png?table=block&id=3ef4455a-9efb-8035-996b-f11eb880978a&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl",
@@ -90,7 +124,6 @@
       "https://30mins.notion.site/image/attachment%3Ad9703722-3916-48fc-8f3d-2aa52ef9bbf7%3A%E6%9C%AA%E5%91%BD%E5%90%8D%E7%9A%84%E4%BD%9C%E5%93%81_3_(5).png?table=block&id=3ef4455a-9efb-805b-a6c8-d5cfbf68b2ab&spaceId=9b94455a-9efb-8188-a968-00031966add7&width=2000&userId=&cache=v2&imgBuildSrc=requestProxiedImageUrl"
     ];
 
-    // 2. 語錄文字清單（可自由新增）
     const quotes = [
       "「得了，少說廢話，走吧！」",
       "「哈哈哈哈哈，老天，這也太搞笑了。」",
@@ -105,13 +138,30 @@
       "「等我哪天想起來那家飾品店到底藏在哪條街角，咱們就一起去挑幾對酷炫的耳環吧——」",
       "「完蛋，昨天忘了幫薇薇調整好防曬系統……看來等她下次飛回來，我的臉非得被她那條大紅尾巴狠狠賞上幾巴掌不可了！」",
       "「路易！別再睡懶覺啦！快爬起來看看我剛改裝完成的『垃圾桶機器人』！」",
-      "「我和路易是全天下最厲害的搭檔，對吧？」",
+      "「我和路易是全天下最厲害的搭檔，對吧？」"
     ];
 
-    let lastImgIndex = -1;
+    // 自動預載入所有圖片，防止閃爍
+    window.onload = function() {
+      images.forEach(src => {
+        const img = new Image();
+        img.src = src;
+      });
+    };
+
+    let lastImgIndex = 0;
     let lastQuoteIndex = -1;
 
     function randomizeAll() {
+      const charEl = document.getElementById("character");
+      const quoteEl = document.getElementById("quote");
+
+      // 觸發對話框淡出與圖片彈跳
+      quoteEl.classList.add("fade");
+      charEl.classList.remove("pop");
+      void charEl.offsetWidth; // 強制重繪以重置 CSS 動畫
+      charEl.classList.add("pop");
+
       let newImgIndex;
       let newQuoteIndex;
 
@@ -126,8 +176,11 @@
       lastImgIndex = newImgIndex;
       lastQuoteIndex = newQuoteIndex;
 
-      document.getElementById("character").src = images[newImgIndex];
-      document.getElementById("quote").innerText = quotes[newQuoteIndex];
+      setTimeout(() => {
+        charEl.src = images[newImgIndex];
+        quoteEl.innerText = quotes[newQuoteIndex];
+        quoteEl.classList.remove("fade");
+      }, 120);
     }
   </script>
 </body>
